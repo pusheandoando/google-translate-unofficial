@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "google-translate-unofficial"
-version = "1.0.0"
+version = "1.0.1"
 description = "Unofficial Google Translate. No API key required."
 readme = "README.md"
 license = {text = "MIT"}

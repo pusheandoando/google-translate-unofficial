@@ -8,9 +8,12 @@ from google_translate import translate, get_languages, LANGUAGES
 
 
 
-_TEXT = "Hello, this is a translation test."
+_TEXT = "Tyger Tyger, burning bright. In the forests of the night. What immortal hand or eye, could frame thy fearful symmetry?"
 _SOURCE = "en"
 _DELAY = 0.5
+
+
+
 
 
 def run():
@@ -46,8 +49,10 @@ def run():
 
     if failed:
         print("\nFailed languages:")
+        
         for lang, code, reason in failed:
             print(f"  {lang} ({code}): {reason}")
+        
         sys.exit(1)
 
 
