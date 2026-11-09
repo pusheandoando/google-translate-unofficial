@@ -1,13 +1,13 @@
-# google_translate/_core.py
+# google_translate_unofficial/core.py
 import requests
 from bs4 import BeautifulSoup
 
-from google_translate._constants import LANGUAGES
-from google_translate._exceptions import (
+from google_translate_unofficial.constants import LANGUAGES
+from google_translate_unofficial.exceptions import (
     LanguageNotSupported,
     RequestFailed,
     TooManyRequests,
-    TranslationError,
+    TranslationError
 )
 
 
@@ -29,6 +29,7 @@ _USER_AGENT = (
 class _Translator:
     _instance = None
 
+
     def __new__(cls):
         if cls._instance is None:
             instance = super().__new__(cls)
@@ -37,16 +38,23 @@ class _Translator:
             instance._session = session
             cls._instance = instance
         
+        
         return cls._instance
+
 
     def _resolve(self, lang):
         if lang == "auto":
             return lang
+        
         if lang in LANGUAGES:
             return LANGUAGES[lang]
+        
         if lang in LANGUAGES.values():
             return lang
+        
+        
         raise LanguageNotSupported(lang)
+
 
     def _fetch_json(self, src, tgt, text):
         try:
@@ -86,7 +94,9 @@ class _Translator:
 
         result = "".join(parts).strip()
         
+        
         return result if result else None
+
 
     def _fetch_html(self, src, tgt, text):
         try:
@@ -113,7 +123,9 @@ class _Translator:
         if not element:
             return None
         
+        
         return element.get_text(strip=True) or None
+
 
     def translate(self, text, target="en", source="auto"):
         if not isinstance(text, str):
@@ -137,13 +149,17 @@ class _Translator:
         if result is not None:
             return result
 
+
         raise TranslationError(text)
+
 
     def translate_batch(self, batch, target="en", source="auto"):
         if not batch:
             raise ValueError("batch cannot be empty")
+
         
         return [self.translate(t, target=target, source=source) for t in batch]
+
 
     def get_languages(self, as_dict=False):
         return LANGUAGES if as_dict else list(LANGUAGES.keys())

@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version from VERSION
+        id: read_version
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Verify branch matches version
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          VERSION="v${{ steps.read_version.outputs.version }}"
+          if [ "$BRANCH" != "$VERSION" ]; then
+            echo "Branch name '$BRANCH' does not match VERSION '$VERSION'"
+            exit 1
+          fi
+
+      - name: Verify python package version matches VERSION
+        run: |
+          PYTHON_VERSION=$(grep -m 1 '^version' python/pyproject.toml | sed -E 's/version = "(.*)"/\1/')
+          if [ "$PYTHON_VERSION" != "${{ steps.read_version.outputs.version }}" ]; then
+            echo "python/pyproject.toml version '$PYTHON_VERSION' does not match VERSION '${{ steps.read_version.outputs.version }}'"
+            exit 1
+          fi
+
+      - name: Verify npm package version matches VERSION
+        run: |
+          NPM_VERSION=$(node -p "require('./js/package.json').version")
+          if [ "$NPM_VERSION" != "${{ steps.read_version.outputs.version }}" ]; then
+            echo "js/package.json version '$NPM_VERSION' does not match VERSION '${{ steps.read_version.outputs.version }}'"
+            exit 1
+          fi
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          TAG="v${{ steps.read_version.outputs.version }}"
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Python
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python build dependencies
+        if: steps.check_tag.outputs.exists == 'false'
+        run: python -m pip install --upgrade build twine
+
+      - name: Build Python package
+        if: steps.check_tag.outputs.exists == 'false'
+        working-directory: python
+        run: python -m build
+
+      - name: Publish Python package to PyPI
+        if: steps.check_tag.outputs.exists == 'false'
+        working-directory: python
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
+
+      - name: Set up Node
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Node dependencies
+        if: steps.check_tag.outputs.exists == 'false'
+        working-directory: js
+        run: npm install
+
+      - name: Publish NPM package
+        if: steps.check_tag.outputs.exists == 'false'
+        working-directory: js
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+      - name: Create tag and GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.read_version.outputs.version }}
+          name: v${{ steps.read_version.outputs.version }}
+          generate_release_notes: true

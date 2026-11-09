@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "google-translate-unofficial"
-version = "1.0.1"
+version = "1.0.2"
 description = "Unofficial Google Translate. No API key required."
 readme = "README.md"
 license = {text = "MIT"}
@@ -22,4 +22,4 @@ docx = ["docx2txt>=0.8"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["google_translate*"]
+include = ["google_translate_unofficial*"]

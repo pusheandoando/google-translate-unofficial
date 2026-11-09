@@ -1,4 +1,4 @@
-# google_translate/_constants.py
+# google_translate_unofficial/constants.py
 
 
 

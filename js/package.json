@@ -1,0 +1,47 @@
+{
+  "name": "google-translate-unofficial",
+  "version": "1.0.2",
+  "description": "Unofficial Google Translate. No API key required.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./src/index.js",
+  "unpkg": "./dist/google-translate-unofficial.global.js",
+  "jsdelivr": "./dist/google-translate-unofficial.global.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:global",
+    "build:cjs": "esbuild src/index.js --bundle --format=cjs --platform=neutral --target=es2018 --outfile=dist/index.cjs",
+    "build:global": "esbuild src/index.js --bundle --format=iife --global-name=GoogleTranslateUnofficial --platform=browser --target=es2018 --minify --outfile=dist/google-translate-unofficial.global.js",
+    "prepublishOnly": "npm run build",
+    "test": "node tests/test-offline.js",
+    "test:languages": "node tests/test-all-languages.js"
+  },
+  "license": "MIT",
+  "keywords": [
+    "google-translate",
+    "translation",
+    "translate"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pusheandoando/google-translate-unofficial.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "files": [
+    "src",
+    "dist"
+  ]
+}

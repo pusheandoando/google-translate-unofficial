@@ -2,8 +2,8 @@
 import sys
 import argparse
 
-from google_translate import translate
-from google_translate._exceptions import (
+from google_translate_unofficial import translate
+from google_translate_unofficial.exceptions import (
     LanguageNotSupported,
     RequestFailed,
     TooManyRequests,
@@ -32,9 +32,6 @@ def main():
     except (LanguageNotSupported, RequestFailed, TooManyRequests, TranslationError) as exc:
         print(str(exc), file=sys.stderr)
         sys.exit(1)
-
-
-
 
 
 if __name__ == "__main__":

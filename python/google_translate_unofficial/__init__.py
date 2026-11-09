@@ -1,7 +1,7 @@
-# google_translate/__init__.py
-from google_translate._core import _Translator
-from google_translate._constants import LANGUAGES
-from google_translate._exceptions import (
+# google_translate_unofficial/__init__.py
+from google_translate_unofficial.core import _Translator
+from google_translate_unofficial.constants import LANGUAGES
+from google_translate_unofficial.exceptions import (
     LanguageNotSupported,
     RequestFailed,
     TooManyRequests,
@@ -15,6 +15,9 @@ from google_translate._exceptions import (
 _t = _Translator()
 
 
+
+
+
 def translate(text, target="en", source="auto"):
     return _t.translate(text, target=target, source=source)
 
@@ -25,6 +28,9 @@ def translate_batch(batch, target="en", source="auto"):
 
 def get_languages(as_dict=False):
     return _t.get_languages(as_dict=as_dict)
+
+
+
 
 
 __all__ = [

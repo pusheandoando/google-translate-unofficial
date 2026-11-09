@@ -2,7 +2,7 @@
 import sys
 import time
 
-from google_translate import translate, get_languages, LANGUAGES
+from google_translate_unofficial import translate, get_languages, LANGUAGES
 
 
 
@@ -54,9 +54,6 @@ def run():
             print(f"  {lang} ({code}): {reason}")
         
         sys.exit(1)
-
-
-
 
 
 if __name__ == "__main__":
