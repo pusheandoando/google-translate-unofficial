@@ -56,23 +56,53 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check if version exists on PyPI
+        id: check_pypi
+        run: |
+          PACKAGE=$(grep -m 1 '^name' python/pyproject.toml | sed -E 's/name = "(.*)"/\1/')
+          VERSION="${{ steps.read_version.outputs.version }}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/$PACKAGE/$VERSION/json")
+          if [ "$STATUS" = "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          elif [ "$STATUS" = "404" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "Unexpected HTTP status '$STATUS' while checking PyPI for $PACKAGE $VERSION"
+            exit 1
+          fi
+
+      - name: Check if version exists on npm
+        id: check_npm
+        run: |
+          PACKAGE=$(node -p "require('./js/package.json').name")
+          VERSION="${{ steps.read_version.outputs.version }}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/$PACKAGE/$VERSION")
+          if [ "$STATUS" = "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          elif [ "$STATUS" = "404" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "Unexpected HTTP status '$STATUS' while checking npm for $PACKAGE $VERSION"
+            exit 1
+          fi
+
       - name: Set up Python
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_pypi.outputs.exists == 'false'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install Python build dependencies
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_pypi.outputs.exists == 'false'
         run: python -m pip install --upgrade build twine
 
       - name: Build Python package
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_pypi.outputs.exists == 'false'
         working-directory: python
         run: python -m build
 
       - name: Publish Python package to PyPI
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_pypi.outputs.exists == 'false'
         working-directory: python
         env:
           TWINE_USERNAME: __token__
@@ -80,19 +110,19 @@ jobs:
         run: twine upload dist/*
 
       - name: Set up Node
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_npm.outputs.exists == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Node dependencies
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_npm.outputs.exists == 'false'
         working-directory: js
         run: npm install
 
       - name: Publish NPM package
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_npm.outputs.exists == 'false'
         working-directory: js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -103,5 +133,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.read_version.outputs.version }}
+          target_commitish: ${{ github.sha }}
           name: v${{ steps.read_version.outputs.version }}
           generate_release_notes: true
